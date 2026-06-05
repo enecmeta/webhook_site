@@ -1,0 +1,12 @@
+# Exclude local development artifacts and git directories
+.git
+.gitignore
+.dockerignore
+Dockerfile
+webhook_tester.exe
+webhook_tester
+main_test.go
+.gemini
+.idea
+.vscode
+*.log

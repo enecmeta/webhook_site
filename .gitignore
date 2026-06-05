@@ -1,0 +1,28 @@
+# Binaries and executables
+webhook_tester.exe
+webhook_tester
+webhook_site.test
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Logs
+*.log
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvsca
+*.ntvssproj
+*.user
+*.userosscache
+*.sln
+*.docstates
+
+# System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

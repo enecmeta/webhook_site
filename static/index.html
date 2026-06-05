@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook.flow | Real-time Webhook Inspector</title>
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Background Glow Blobs -->
+    <div class="bg-glow blob-1"></div>
+    <div class="bg-glow blob-2"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i data-lucide="radio"></i>
+                </div>
+                <h1>Webhook<span class="gradient-text">.flow</span></h1>
+                <span class="badge badge-beta">PRO</span>
+            </div>
+            
+            <div class="url-control-card">
+                <div class="url-input-container">
+                    <span class="url-prefix">YOUR WEBHOOK URL</span>
+                    <input type="text" id="webhook-url" readonly value="Generating URL...">
+                    <button class="btn btn-icon" id="copy-url-btn" title="Copy URL">
+                        <i data-lucide="copy" id="copy-icon"></i>
+                        <span id="copy-tooltip">Copy URL</span>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="open-config-btn">
+                        <i data-lucide="sliders"></i>
+                        <span>Response Settings</span>
+                    </button>
+                    <button class="btn btn-secondary" id="new-url-btn">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>New URL</span>
+                    </button>
+                    <button class="btn btn-danger" id="clear-requests-btn">
+                        <i data-lucide="trash-2"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-main">
+            <!-- SIDEBAR: REQUEST LIST -->
+            <section class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Captured Requests</h2>
+                    <span class="badge" id="request-count-badge">0</span>
+                </div>
+                <div class="search-box">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="request-search" placeholder="Filter requests (e.g. POST, IP, data)...">
+                </div>
+                <div class="request-list-container" id="request-list">
+                    <!-- Dynamic Items will be rendered here -->
+                    <div class="sidebar-empty">
+                        <div class="pulse-radar">
+                            <div class="radar-wave"></div>
+                            <div class="radar-center"></div>
+                        </div>
+                        <p class="empty-title">Waiting for webhooks</p>
+                        <p class="empty-subtitle">Send an HTTP request to your URL above to see it instantly.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENT: REQUEST DETAILS -->
+            <section class="content-pane" id="content-pane">
+                <!-- Welcome / Empty State -->
+                <div class="welcome-container" id="welcome-view">
+                    <div class="welcome-card">
+                        <i data-lucide="webhook" class="welcome-icon"></i>
+                        <h2>Ready to Receive Webhooks</h2>
+                        <p>Webhook.flow captures any incoming HTTP request (headers, parameters, body, files, etc.) and streams them to this browser dashboard in real-time.</p>
+                        
+                        <div class="quick-start-box">
+                            <h3>Test your webhook immediately:</h3>
+                            <div class="code-header">
+                                <span>cURL Command</span>
+                                <button class="btn-text-copy" onclick="copyText('curl-code')">
+                                    <i data-lucide="copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre id="curl-code">curl -X POST -d '{"event":"user.created", "user":{"name":"Jane Doe", "email":"jane@example.com"}}' -H "Content-Type: application/json" <span class="placeholder-url">http://localhost:8080/w/{token}</span></pre>
+                        </div>
+
+                        <div class="integration-examples">
+                            <h3>Alternative integration snippets:</h3>
+                            <div class="tabs-snippets">
+                                <button class="snippet-tab active" data-lang="js">Node.js</button>
+                                <button class="snippet-tab" data-lang="py">Python</button>
+                                <button class="snippet-tab" data-lang="go">Go</button>
+                            </div>
+                            <div class="snippet-content">
+                                <pre id="snippet-code-js" class="snippet-pre active">fetch('<span class="placeholder-url">http://localhost:8080/w/{token}</span>', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ message: 'Hello from Node.js!' })
+});</pre>
+                                <pre id="snippet-code-py" class="snippet-pre">import requests
+
+url = "<span class="placeholder-url">http://localhost:8080/w/{token}</span>"
+data = {"message": "Hello from Python!"}
+response = requests.post(url, json=data)
+print(response.text)</pre>
+                                <pre id="snippet-code-go" class="snippet-pre">package main
+
+import (
+	"bytes"
+	"net/http"
+)
+
+func main() {
+	url := "<span class="placeholder-url">http://localhost:8080/w/{token}</span>"
+	jsonStr := []byte(`{"message": "Hello from Go!"}`)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	client.Do(req)
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Request Inspector -->
+                <div class="inspector-container hidden" id="inspector-view">
+                    <!-- Summary Cards -->
+                    <div class="details-grid">
+                        <div class="grid-card">
+                            <span class="card-label">HTTP Method</span>
+                            <span class="card-val" id="detail-method">-</span>
+                        </div>
+                        <div class="grid-card">
+                            <span class="card-label">Time Captured</span>
+                            <span class="card-val" id="detail-time">-</span>
+                        </div>
+                        <div class="grid-card">
+                            <span class="card-label">Client IP</span>
+                            <span class="card-val" id="detail-ip">-</span>
+                        </div>
+                        <div class="grid-card">
+                            <span class="card-label">Content Size</span>
+                            <span class="card-val" id="detail-size">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Inspector Tabs -->
+                    <div class="inspector-tabs">
+                        <button class="tab-btn active" data-tab="tab-headers">Headers <span class="tab-badge" id="header-count">0</span></button>
+                        <button class="tab-btn" data-tab="tab-query">Query Params <span class="tab-badge" id="query-count">0</span></button>
+                        <button class="tab-btn" data-tab="tab-body">Request Body</button>
+                        <button class="tab-btn" data-tab="tab-raw">Raw HTTP</button>
+                    </div>
+
+                    <!-- Inspector Panels -->
+                    <div class="inspector-panels">
+                        <!-- Headers Panel -->
+                        <div class="tab-panel active" id="tab-headers">
+                            <div class="panel-tools">
+                                <input type="text" id="header-search" placeholder="Search headers...">
+                            </div>
+                            <div class="table-container">
+                                <table class="meta-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Header Key</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="headers-tbody">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Query Params Panel -->
+                        <div class="tab-panel" id="tab-query">
+                            <div class="table-container">
+                                <table class="meta-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="query-tbody">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="empty-table-msg" id="query-empty">No query parameters found in the URL.</div>
+                        </div>
+
+                        <!-- Body Panel -->
+                        <div class="tab-panel" id="tab-body">
+                            <div class="body-tools">
+                                <div class="body-type-badge-container">
+                                    <div class="body-type-badge" id="body-type-badge">Text</div>
+                                </div>
+                                <div class="body-tools-actions">
+                                    <div class="body-search-container">
+                                        <i data-lucide="search"></i>
+                                        <input type="text" id="body-search" placeholder="Search body content...">
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm" id="copy-body-btn">
+                                        <i data-lucide="copy"></i> Copy Body
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="code-viewer-container">
+                                <pre id="body-raw-view" class="code-raw"></pre>
+                            </div>
+                        </div>
+
+                        <!-- Raw HTTP Panel -->
+                        <div class="tab-panel" id="tab-raw">
+                            <div class="body-tools">
+                                <div class="body-type-badge">HTTP/1.1 DUMP</div>
+                                <button class="btn btn-secondary btn-sm" id="copy-raw-btn">
+                                    <i data-lucide="copy"></i> Copy Raw Dump
+                                </button>
+                            </div>
+                            <div class="code-viewer-container">
+                                <pre id="raw-http-view" class="code-raw"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- CONFIGURATION DRAWER OVERLAY -->
+    <div class="drawer-overlay hidden" id="config-drawer-overlay">
+        <div class="drawer">
+            <div class="drawer-header">
+                <h2>Configure Custom Response</h2>
+                <button class="btn-close" id="close-config-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <p class="drawer-description">Define the status code, content-type, and body that Webhook.flow will return when your webhook URL is requested.</p>
+                <form id="config-form">
+                    <div class="form-group">
+                        <label for="resp-status">HTTP Status Code</label>
+                        <select id="resp-status">
+                            <option value="200">200 OK</option>
+                            <option value="201">201 Created</option>
+                            <option value="202">202 Accepted</option>
+                            <option value="204">204 No Content</option>
+                            <option value="301">301 Moved Permanently</option>
+                            <option value="302">302 Found</option>
+                            <option value="400">400 Bad Request</option>
+                            <option value="401">401 Unauthorized</option>
+                            <option value="403">403 Forbidden</option>
+                            <option value="404">404 Not Found</option>
+                            <option value="500">500 Internal Server Error</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resp-content-type">Response Content-Type</label>
+                        <select id="resp-content-type">
+                            <option value="text/plain">text/plain</option>
+                            <option value="application/json">application/json</option>
+                            <option value="text/html">text/html</option>
+                            <option value="application/xml">application/xml</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resp-body">Response Body</label>
+                        <textarea id="resp-body" rows="10" placeholder="e.g. ok or { &quot;success&quot;: true }"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="save-config-btn">
+                        <i data-lucide="save"></i>
+                        <span>Save Configuration</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
