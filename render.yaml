@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: webhook-site
+    env: docker
+    region: oregon
+    plan: free
+    healthCheckPath: /
